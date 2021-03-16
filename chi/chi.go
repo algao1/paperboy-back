@@ -17,6 +17,8 @@ type Handler struct {
 	chi http.Handler
 }
 
+var _ http.Handler = (*Handler)(nil)
+
 // Init configures and returns a chi router.
 func Init(ss paperboy.SummaryService) *Handler {
 	r := chi.NewRouter()

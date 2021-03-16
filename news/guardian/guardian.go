@@ -19,6 +19,8 @@ type Service struct {
 	Key string
 }
 
+var _ paperboy.GuardianService = (*Service)(nil)
+
 // Fetch returns the result of querying the Guardian API with the specified parameters.
 func (s *Service) Fetch(qparams map[string]string) (*paperboy.Guardian, error) {
 	var g paperboy.Guardian

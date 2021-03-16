@@ -16,6 +16,8 @@ type Redis struct {
 	ss  paperboy.SummaryService
 }
 
+var _ paperboy.SummaryService = (*Redis)(nil)
+
 // NewSummaryCache returns a new read-through cache for service.
 func NewSummaryCache(addr, port, pass string, db int, ss paperboy.SummaryService) paperboy.SummaryService {
 	// Initialize new redis client.

@@ -12,6 +12,8 @@ import (
 // Factory is responsible for creating Taskers assigned with tasks.
 type Factory struct{}
 
+var _ paperboy.TaskerFactory = (*Factory)(nil)
+
 // Tasker is responsible for executing the assigned task according to
 // the given configurations.
 type Tasker struct {

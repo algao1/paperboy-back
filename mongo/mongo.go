@@ -16,6 +16,8 @@ type SummaryService struct {
 	col *mongo.Collection
 }
 
+var _ paperboy.SummaryService = (*SummaryService)(nil)
+
 // Open returns a pointer to SummaryService with the MongoDB collection configured.
 func Open(uri, key, db, col string) (paperboy.SummaryService, error) {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(fmt.Sprintf(uri, key)))
