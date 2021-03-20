@@ -23,8 +23,6 @@ var _ paperboy.GuardianService = (*Service)(nil)
 
 // Fetch returns the result of querying the Guardian API with the specified parameters.
 func (s *Service) Fetch(qparams map[string]string) (*paperboy.Guardian, error) {
-	var g paperboy.Guardian
-
 	// Appends params onto url.
 	url := "https://content.guardianapis.com/search?api-key=" + s.Key
 	for k, v := range qparams {
@@ -45,6 +43,7 @@ func (s *Service) Fetch(qparams map[string]string) (*paperboy.Guardian, error) {
 	defer res.Body.Close()
 	log.Println("[Guardian API] reading body")
 
+	var g paperboy.Guardian
 	err = json.Unmarshal(body, &g)
 	if err != nil {
 		return nil, err
@@ -76,9 +75,8 @@ func (s *Service) Extract(res []*paperboy.Result) ([]*paperboy.Summary, error) {
 
 // ExtractOne returns the result of summarizing a paperboy.Result.
 func (s *Service) ExtractOne(r *paperboy.Result) (*paperboy.Summary, error) {
-	var im paperboy.Image
-
 	// Find image and add the appropriate caption.
+	var im paperboy.Image
 	var assets []paperboy.Asset
 	if len(r.Blocks.Main.Elements) > 0 && r.Blocks.Main.Elements[0].Type == "image" {
 		assets = r.Blocks.Main.Elements[0].Assets

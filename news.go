@@ -6,7 +6,7 @@ type TypeData struct {
 	Height int
 }
 
-// Asset is an image, video or resource used in an article.
+// An Asset is an image, video or resource used in an article.
 type Asset struct {
 	File     string
 	TypeData TypeData

@@ -27,7 +27,7 @@ func NewSummaryCache(addr, port, pass string, db int, ss paperboy.SummaryService
 		DB:       db,
 	})
 
-	// Construct and return cache.
+	// Constructs and returns cache.
 	return &Redis{rdb: rdb, ss: ss}
 }
 
@@ -56,8 +56,7 @@ func (r *Redis) Summary(objectID string) (*paperboy.Summary, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%q: %w", "unable to unmarshal json", err)
 		}
-
-		err = r.rdb.Set(ctx, objectID, json, 1*time.Hour).Err()
+		r.rdb.Set(ctx, objectID, json, 1*time.Hour).Err()
 	}
 	return sum, nil
 }

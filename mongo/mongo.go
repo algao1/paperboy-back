@@ -28,7 +28,7 @@ func Open(uri, key, db, col string) (paperboy.SummaryService, error) {
 	return &SummaryService{col: collection}, nil
 }
 
-// Summary returns a pointer to a summary for a given objectID.
+// Summary returns a pointer to a summary object for a given objectID.
 func (s *SummaryService) Summary(id string) (*paperboy.Summary, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -49,7 +49,8 @@ type hex struct {
 
 // Summaries returns a slice of the most recent summaries with a given sectionID such as 'world' or 'tech'.
 // A starting objectID and page number must also be provided for pagination.
-// 	objectID: nil -> most recent article.
+//		sectionID: nil -> articles in all sections
+// 		startID: nil -> most recent article
 func (s *SummaryService) Summaries(sectionID, startID string, size int) ([]*paperboy.Summary, string, error) {
 	// Query range filter using the default indexed (objectid) _id field and sectionid.
 	var objectID primitive.ObjectID
@@ -82,17 +83,15 @@ func (s *SummaryService) Summaries(sectionID, startID string, size int) ([]*pape
 	var lastValue string
 	for cursor.Next(context.Background()) {
 		var summ paperboy.Summary
-		var h hex
 		err = cursor.Decode(&summ)
 		if err != nil {
 			return res, lastValue, fmt.Errorf("%q: %w", "could not decode summary", err)
 		}
-
-		// Get the objectId.
+		// Gets the objectId.
+		var h hex
 		cursor.Decode(&h)
 		lastValue = h.ID.Hex()
-
-		// Append and update the last objectId.
+		// Appends and updates the last objectId.
 		summ.ObjectID = lastValue
 		res = append(res, &summ)
 	}
