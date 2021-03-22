@@ -70,7 +70,7 @@ func (s *SummaryService) Summaries(sectionID, startID string, size int) ([]*pape
 
 	// Query options.
 	var opts []*options.FindOptions
-	opts = append(opts, options.Find().SetSort(bson.M{"_id": -1}))
+	opts = append(opts, options.Find().SetSort(bson.M{"info.date": -1}))
 	opts = append(opts, options.Find().SetLimit(int64(size)))
 
 	// Fetch cursor.
