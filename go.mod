@@ -3,12 +3,13 @@ module paperboy-back
 go 1.16
 
 require (
-	github.com/algao1/basically v0.0.0
+	github.com/algao1/basically v0.2.0
 	github.com/go-chi/chi/v5 v5.0.0
 	github.com/go-redis/redis/v8 v8.7.1 // indirect
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc // indirect
 	go.mongodb.org/mongo-driver v1.4.6
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect

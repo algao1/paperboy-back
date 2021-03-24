@@ -14,13 +14,26 @@ type Info struct {
 }
 
 // Article contains information derived from the article such as the title,
-// trail text, summary text, and wordcount.
+// trail text, summary text, and text length.
 type Article struct {
-	Title         string
-	TrailText     string
-	SummaryText   []string
-	FullWordCount int
-	SummWordCount int
+	Title       string
+	TrailText   string
+	SummaryText []*Sentence
+	Keywords    []*Keyword
+	FullLength  int
+	SummLength  int
+}
+
+// Sentence is the result returned by the summarization.
+type Sentence struct {
+	Sentence  string
+	Sentiment float64
+}
+
+// Keyword is the result returned by the extraction.
+type Keyword struct {
+	Word   string
+	Weight float64
 }
 
 // Image contains information about the image used in the article.

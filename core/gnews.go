@@ -21,7 +21,7 @@ func GuardianNews(section string, sch chan<- *paperboy.Summary,
 			"show-fields": "trailText,wordcount,bodyText",
 			"show-tags":   "contributor",
 			"show-blocks": "main",
-			"from-date":   time.Now().UTC().Add(-1 * time.Hour).Format("2006-01-02T15:04:05.999999"),
+			"from-date":   time.Now().UTC().Add(-2 * time.Hour).Format("2006-01-02T15:04:05.999999"),
 		}
 
 		g, err := gs.Fetch(qparams)
