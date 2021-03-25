@@ -9,7 +9,6 @@ import (
 	"paperboy-back"
 	"regexp"
 	"time"
-	"unicode/utf8"
 
 	"github.com/algao1/basically/btrank"
 	"github.com/algao1/basically/document"
@@ -110,9 +109,6 @@ func (s *Service) ExtractOne(r *paperboy.Result) (*paperboy.Summary, error) {
 	reg := regexp.MustCompile("<[^>]*>")
 	tText := reg.ReplaceAllString(r.Fields.TrailText, "")
 
-	fLength := utf8.RuneCountInString(r.Fields.BodyText)
-	sLength := 0
-
 	// Set up basically document.
 	doc, err := document.Create(r.Fields.BodyText, &btrank.BiasedTextRank{}, &trank.KWTextRank{}, &parser.Parser{})
 	if err != nil {
@@ -120,18 +116,17 @@ func (s *Service) ExtractOne(r *paperboy.Result) (*paperboy.Summary, error) {
 	}
 
 	// Summarization using basically.
-	sents, err := doc.Summarize(7, "")
+	sents, err := doc.Summarize(7, 0, "")
 	if err != nil {
 		return nil, fmt.Errorf("%q: %w", "unable to summarize document", err)
 	}
 	psents := make([]*paperboy.Sentence, len(sents))
 	for idx, sen := range sents {
 		psents[idx] = &paperboy.Sentence{Sentence: sen.Raw, Sentiment: sen.Sentiment}
-		sLength += utf8.RuneCountInString(sen.Raw)
 	}
 
 	// Keyword extraction using basically.
-	kwords, err := doc.Highlight(-1, true)
+	kwords, err := doc.Highlight(20, true)
 	if err != nil {
 		return nil, fmt.Errorf("%q: %w", "unable to extract keywords", err)
 	}
@@ -139,6 +134,8 @@ func (s *Service) ExtractOne(r *paperboy.Result) (*paperboy.Summary, error) {
 	for idx, w := range kwords {
 		pkwords[idx] = &paperboy.Keyword{Word: w.Word, Weight: w.Weight}
 	}
+
+	fLength, sLength := doc.Characters()
 
 	summ := paperboy.Summary{
 		Info: paperboy.Info{
