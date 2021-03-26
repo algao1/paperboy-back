@@ -36,15 +36,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ss = redis.NewSummaryCache(os.Getenv("CACHE_URL"), os.Getenv("CACHE_PORT"), os.Getenv("CACHE_PASS"), cdb, ss)
+	ssc := redis.NewSummaryCache(os.Getenv("CACHE_URL"), os.Getenv("CACHE_PORT"), os.Getenv("CACHE_PASS"), cdb, ss)
 
 	gs := &guardian.Service{Key: os.Getenv("GUARDIAN_KEY")}
 	tf := &tasker.Factory{}
-	h := chi.Init(ss)
+	h := chi.Init(ssc)
 
 	// Dependency injection.
 	serv := core.Server{
-		SummaryService:  ss,
+		SummaryService:  ssc,
 		GuardianService: gs,
 		TaskerFactory:   tf,
 		Handler:         h,

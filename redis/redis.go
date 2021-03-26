@@ -19,7 +19,7 @@ type Redis struct {
 var _ paperboy.SummaryService = (*Redis)(nil)
 
 // NewSummaryCache returns a new read-through cache for service.
-func NewSummaryCache(addr, port, pass string, db int, ss paperboy.SummaryService) paperboy.SummaryService {
+func NewSummaryCache(addr, port, pass string, db int, ss paperboy.SummaryService) *Redis {
 	// Initialize new redis client.
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", addr, port),
@@ -90,6 +90,11 @@ func (r *Redis) Summaries(sectionID, startID string, size int) ([]*paperboy.Summ
 		r.rdb.Set(ctx, fmt.Sprintf("%s:%s:%v", sectionID, startID, size), json, 1*time.Hour).Err()
 	}
 	return sum, last, nil
+}
+
+// Search returns a list of summaries matched by Mongo's fuzzy search.
+func (r *Redis) Search(query string, startID string, size int) ([]*paperboy.Summary, error) {
+	return r.ss.Search(query, startID, size)
 }
 
 // Create inserts a summary into the database if possible, otherwise,

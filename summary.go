@@ -55,9 +55,11 @@ type Summary struct {
 //	Summary: returns a summary with a given objectID.
 //	Summaries: returns a list of summaries matching a sectionID and starting from
 //		a startID. If startID is empty, will fetch the most recent entries.
+//  Search: returns a list of summaries with keywords matching the query.
 // 	Create: writes a summary to the database.
 type SummaryService interface {
 	Summary(objectID string) (*Summary, error)
 	Summaries(sectionID, startID string, size int) ([]*Summary, string, error)
+	Search(query string, startID string, size int) ([]*Summary, error)
 	Create(s *Summary) error
 }

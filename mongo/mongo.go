@@ -19,10 +19,10 @@ type SummaryService struct {
 var _ paperboy.SummaryService = (*SummaryService)(nil)
 
 // Open returns a pointer to SummaryService with the MongoDB collection configured.
-func Open(uri, key, db, col string) (paperboy.SummaryService, error) {
+func Open(uri, key, db, col string) (*SummaryService, error) {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(fmt.Sprintf(uri, key)))
 	if err != nil {
-		return nil, fmt.Errorf("%q: %w", "could not connect to collection", err)
+		return nil, fmt.Errorf("%q: %w", "unable to connect to collection", err)
 	}
 	collection := client.Database(db).Collection(col)
 	return &SummaryService{col: collection}, nil
@@ -62,7 +62,7 @@ func (s *SummaryService) Summaries(sectionID, startID string, size int) ([]*pape
 		if err != nil {
 			return nil, "", fmt.Errorf("%q: %w", "invalid objectId", err)
 		}
-		filters["_id"] = bson.M{"$lt": objectID}
+		filters["_id"] = bson.M{"$gt": objectID}
 	}
 	if len(sectionID) > 0 {
 		filters["info.sectionid"] = sectionID
@@ -85,7 +85,7 @@ func (s *SummaryService) Summaries(sectionID, startID string, size int) ([]*pape
 		var summ paperboy.Summary
 		err = cursor.Decode(&summ)
 		if err != nil {
-			return res, lastValue, fmt.Errorf("%q: %w", "could not decode summary", err)
+			return res, lastValue, fmt.Errorf("%q: %w", "unable to decode summary", err)
 		}
 		// Gets the objectId.
 		var h hex
@@ -99,6 +99,48 @@ func (s *SummaryService) Summaries(sectionID, startID string, size int) ([]*pape
 	return res, lastValue, nil
 }
 
+// Search returns a list of summaries found using Mongo's fuzzy search
+// with the text index being the 'keywords' generated previously.
+func (s *SummaryService) Search(query string, startID string, size int) ([]*paperboy.Summary, error) {
+	var objectID primitive.ObjectID
+	var err error
+
+	// Configure search options, and filter.
+	opts := options.Find().SetSort(bson.M{"info.date": -1}).SetLimit(int64(size))
+	filters := bson.M{"$text": bson.M{"$search": query}}
+	if len(startID) > 0 {
+		objectID, err = primitive.ObjectIDFromHex(startID)
+		if err != nil {
+			return nil, fmt.Errorf("%q: %w", "invalid objectId", err)
+		}
+		filters["_id"] = bson.M{"$gt": objectID}
+	}
+
+	cursor, err := s.col.Find(context.TODO(), filters, opts)
+	if err != nil {
+		return nil, fmt.Errorf("%q: %w", "unable to perform search", err)
+	}
+
+	var summaries []*paperboy.Summary
+	var lastValue string
+	for cursor.Next(context.Background()) {
+		var summ paperboy.Summary
+		err = cursor.Decode(&summ)
+		if err != nil {
+			return nil, fmt.Errorf("%q: %w", "unable to decode summary", err)
+		}
+		// Gets the objectId.
+		var h hex
+		cursor.Decode(&h)
+		lastValue = h.ID.Hex()
+		// Appends and updates the last objectId.
+		summ.ObjectID = lastValue
+		summaries = append(summaries, &summ)
+	}
+
+	return summaries, nil
+}
+
 // Create inserts a summary into the database if possible, otherwise,
 // it will update the existing entry.
 func (s *SummaryService) Create(summary *paperboy.Summary) error {
@@ -109,7 +151,7 @@ func (s *SummaryService) Create(summary *paperboy.Summary) error {
 
 	_, err := s.col.UpdateOne(context.TODO(), filter, update, opts)
 	if err != nil {
-		return fmt.Errorf("%q: %w", "could not update document", err)
+		return fmt.Errorf("%q: %w", "unable to update document", err)
 	}
 	return nil
 }

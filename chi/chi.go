@@ -29,6 +29,7 @@ func Init(ss paperboy.SummaryService) *Handler {
 
 	// RESTy routes for 'summaries' resource.
 	r.Get("/api/summary", apiGetSummary(ss))
+	r.Get("/api/summaries", apiSearchSummaries(ss))
 	r.Get("/api/summaries/{section}", apiGetSummaries(ss))
 
 	return &Handler{chi: r}
@@ -37,6 +38,43 @@ func Init(ss paperboy.SummaryService) *Handler {
 // ServeHTTP is a wrapper function for chi.ServeHTTP.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.chi.ServeHTTP(w, r)
+}
+
+// Closure to bind SummaryService to the HandlerFunc in order to search summaries.
+func apiSearchSummaries(ss paperboy.SummaryService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Obtain the query parameter 'q'.
+		query := r.URL.Query().Get("q")
+
+		// Obtain the query parameter 'id'.
+		id := r.URL.Query().Get("id")
+
+		// Obtain the query parameter 'size'.
+		ssize := r.URL.Query().Get("size")
+		size, err := strconv.Atoi(ssize)
+		if err != nil {
+			log.Printf("[%s] query param 'recent=%s' is invalid\n", r.URL, ssize)
+			size = 10
+		}
+
+		summaries, err := ss.Search(query, id, size)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Printf("[%s] found %d summaries", r.URL, len(summaries))
+
+		// Marshals slice of summaries into []bytes.
+		js, err := json.Marshal(summaries)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Sets and writes content-type of 'application/json'.
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+	}
 }
 
 // Closure to bind SummaryService to the HandlerFunc in order to serve summaries.
