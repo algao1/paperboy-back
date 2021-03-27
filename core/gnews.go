@@ -12,7 +12,7 @@ import (
 
 // GuardianNews returns a Tasker that will periodically fetch news from the Guardian API.
 func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.GuardianService, tf paperboy.TaskerFactory) (paperboy.Tasker, error) {
-	// Define the task.
+	// Defines the task.
 	task := func() error {
 		start := time.Now()
 		qparams := map[string]string{
@@ -38,8 +38,10 @@ func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.Guardi
 		go func() {
 			for _, res := range g.Response.Results {
 				wg.Add(1)
+
 				go func(res *paperboy.Result) {
 					defer wg.Done()
+
 					summ, err := gs.ExtractOne(res)
 					if err != nil {
 						errCh <- err
@@ -48,21 +50,24 @@ func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.Guardi
 				}(res)
 			}
 
+			// Waits for all summaries to be completed, then closes the channel.
 			wg.Wait()
 			close(sumCh)
 		}()
 
 		var summs []*paperboy.Summary
 
-		// Receive over channel with select.
+		// Receive summaries and error over channels.
 		for {
 			select {
 			case s, ok := <-sumCh:
 				if !ok {
+					// If channel is closed, we will sort the summaries chronologically.
 					sort.SliceStable(summs, func(i, j int) bool { return summs[i].Info.Date.After(summs[j].Info.Date) })
 					for _, sum := range summs {
 						ss.Create(sum)
 					}
+
 					log.Printf("[Guardian News - %s] summarized %d articles in %v",
 						strings.Title(section),
 						len(g.Response.Results),
@@ -78,7 +83,7 @@ func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.Guardi
 		}
 	}
 
-	// Configure and return Tasker.
+	// Configures and returns a Tasker.
 	conf := paperboy.TaskConfig{Name: "Guardian World", Period: 1 * time.Hour, RecoverPeriod: 5 * time.Minute}
 	guardianNews, err := tf.CreateTasker(conf, task)
 	if err != nil {
