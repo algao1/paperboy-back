@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"log"
 	"paperboy-back"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 )
 
 // GuardianNews returns a Tasker that will periodically fetch news from the Guardian API.
-func GuardianNews(section string, sch chan<- *paperboy.Summary,
-	gs paperboy.GuardianService, tf paperboy.TaskerFactory) (paperboy.Tasker, error) {
+func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.GuardianService, tf paperboy.TaskerFactory) (paperboy.Tasker, error) {
 	// Define the task.
-	task := func(sch chan<- *paperboy.Summary, gs paperboy.GuardianService) error {
+	task := func() error {
 		start := time.Now()
 		qparams := map[string]string{
 			"section":     section,
@@ -31,7 +31,7 @@ func GuardianNews(section string, sch chan<- *paperboy.Summary,
 
 		// Create channels and waitGroup.
 		errCh := make(chan error)
-		waitCh := make(chan struct{})
+		sumCh := make(chan *paperboy.Summary)
 		var wg sync.WaitGroup
 
 		// Assign each summarization to a seperate goroutine.
@@ -44,31 +44,43 @@ func GuardianNews(section string, sch chan<- *paperboy.Summary,
 					if err != nil {
 						errCh <- err
 					}
-					sch <- summ
+					sumCh <- summ
 				}(res)
 			}
 
-			// Close the channel when finished.
 			wg.Wait()
-			close(waitCh)
+			close(sumCh)
 		}()
 
+		var summs []*paperboy.Summary
+
 		// Receive over channel with select.
-		select {
-		case <-waitCh:
-			log.Printf("[Guardian News - %s] summarized %d articles in %v",
-				strings.Title(section),
-				len(g.Response.Results),
-				time.Since(start))
-			return nil
-		case err := <-errCh:
-			return fmt.Errorf("%q: %w", "failed to summarize news", err)
+		for {
+			select {
+			case s, ok := <-sumCh:
+				if !ok {
+					sort.SliceStable(summs, func(i, j int) bool { return summs[i].Info.Date.After(summs[j].Info.Date) })
+					for _, sum := range summs {
+						ss.Create(sum)
+					}
+					log.Printf("[Guardian News - %s] summarized %d articles in %v",
+						strings.Title(section),
+						len(g.Response.Results),
+						time.Since(start),
+					)
+					return nil
+				}
+				summs = append(summs, s)
+			case err := <-errCh:
+				close(errCh)
+				return fmt.Errorf("%q: %w", "failed to summarize news", err)
+			}
 		}
 	}
 
 	// Configure and return Tasker.
 	conf := paperboy.TaskConfig{Name: "Guardian World", Period: 1 * time.Hour, RecoverPeriod: 5 * time.Minute}
-	guardianNews, err := tf.CreateTasker(conf, task, sch, gs)
+	guardianNews, err := tf.CreateTasker(conf, task)
 	if err != nil {
 		return guardianNews, fmt.Errorf("%q: %w", "could not create Guardian tasker", err)
 	}
