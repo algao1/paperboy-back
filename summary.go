@@ -49,7 +49,7 @@ type Summary struct {
 	Info     Info
 	Article  Article
 	Image    Image
-	Score    float64
+	Score    float64 `json:"score,omitempty" bson:"score,omitempty"`
 }
 
 // SummaryService defines the functionality provided by the service.

@@ -21,7 +21,8 @@ func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.Guardi
 			"show-fields": "trailText,wordcount,bodyText",
 			"show-tags":   "contributor",
 			"show-blocks": "main",
-			"from-date":   time.Now().UTC().Add(-48 * time.Hour).Format("2006-01-02T15:04:05.999999"),
+			"page-size":   "50",
+			"from-date":   time.Now().UTC().Add(-24 * time.Hour).Format("2006-01-02T15:04:05.999999"),
 		}
 
 		g, err := gs.Fetch(qparams)
@@ -63,7 +64,8 @@ func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.Guardi
 			case s, ok := <-sumCh:
 				if !ok {
 					// If channel is closed, we will sort the summaries chronologically.
-					sort.SliceStable(summs, func(i, j int) bool { return summs[i].Info.Date.After(summs[j].Info.Date) })
+					// Adds the oldest news first, and moving towards the latest news.
+					sort.SliceStable(summs, func(i, j int) bool { return summs[i].Info.Date.Before(summs[j].Info.Date) })
 					for _, sum := range summs {
 						ss.Create(sum)
 					}
