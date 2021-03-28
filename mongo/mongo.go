@@ -101,40 +101,32 @@ func (s *SummaryService) Summaries(sectionID, startID string, size int) ([]*pape
 
 // Search returns a list of summaries found using Mongo's fuzzy search
 // with the text index being the 'keywords' generated previously.
-func (s *SummaryService) Search(query string, startID string, size int) ([]*paperboy.Summary, error) {
-	var objectID primitive.ObjectID
+func (s *SummaryService) Search(query string) ([]*paperboy.Summary, error) {
 	var err error
 
 	// Configure search options, and filter.
-	opts := options.Find().SetSort(bson.M{"info.date": -1}).SetLimit(int64(size))
 	filters := bson.M{"$text": bson.M{"$search": query}}
-	if len(startID) > 0 {
-		objectID, err = primitive.ObjectIDFromHex(startID)
-		if err != nil {
-			return nil, fmt.Errorf("%q: %w", "invalid objectId", err)
-		}
-		filters["_id"] = bson.M{"$gt": objectID}
+	opts := []*options.FindOptions{
+		options.Find().SetProjection(bson.M{"score": bson.M{"$meta": "textScore"}}),
+		options.Find().SetSort(bson.M{"score": bson.M{"$meta": "textScore"}}),
 	}
 
-	cursor, err := s.col.Find(context.TODO(), filters, opts)
+	cursor, err := s.col.Find(context.TODO(), filters, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("%q: %w", "unable to perform search", err)
 	}
 
 	var summaries []*paperboy.Summary
-	var lastValue string
 	for cursor.Next(context.Background()) {
 		var summ paperboy.Summary
 		err = cursor.Decode(&summ)
 		if err != nil {
 			return nil, fmt.Errorf("%q: %w", "unable to decode summary", err)
 		}
-		// Gets the objectId.
+		// Gets and updates the last objectId.
 		var h hex
 		cursor.Decode(&h)
-		lastValue = h.ID.Hex()
-		// Appends and updates the last objectId.
-		summ.ObjectID = lastValue
+		summ.ObjectID = h.ID.Hex()
 		summaries = append(summaries, &summ)
 	}
 

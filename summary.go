@@ -49,6 +49,7 @@ type Summary struct {
 	Info     Info
 	Article  Article
 	Image    Image
+	Score    float64
 }
 
 // SummaryService defines the functionality provided by the service.
@@ -60,6 +61,6 @@ type Summary struct {
 type SummaryService interface {
 	Summary(objectID string) (*Summary, error)
 	Summaries(sectionID, startID string, size int) ([]*Summary, string, error)
-	Search(query string, startID string, size int) ([]*Summary, error)
+	Search(query string) ([]*Summary, error)
 	Create(s *Summary) error
 }
