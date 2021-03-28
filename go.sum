@@ -2,6 +2,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af/go.mod h1:K08gAheRH3/J6wwsYMMT4xOr94bZjxIelGM0+d/wbFw=
 github.com/algao1/basically v0.2.2 h1:TcZV30OiG2HhXJnJSQXIhTh18iPP9YTMkxTk8jl+vBw=
 github.com/algao1/basically v0.2.2/go.mod h1:KpYbTCXmZK7oiYvif3KNb10Naxq199O2mq5ouvBzfIA=
+github.com/algao1/basically v0.2.3 h1:gq1GGR2iQLGL7ptmb9nlsYFZTCWsRCbmY3FwLPO8XFY=
+github.com/algao1/basically v0.2.3/go.mod h1:KpYbTCXmZK7oiYvif3KNb10Naxq199O2mq5ouvBzfIA=
 github.com/aws/aws-sdk-go v1.34.28 h1:sscPpn/Ns3i0F4HPEWAVcwdIRaZZCuL7llJ2/60yPIk=
 github.com/aws/aws-sdk-go v1.34.28/go.mod h1:H7NKnBqNVzoTJpGfLrQkkD+ytBA93eiDYi/+8rV9s48=
 github.com/bbalet/stopwords v1.0.0/go.mod h1:sAWrQoDMfqARGIn4s6dp7OW7ISrshUD8IP2q3KoqPjc=

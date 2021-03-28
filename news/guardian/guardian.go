@@ -126,7 +126,7 @@ func (s *Service) ExtractOne(r *paperboy.Result) (*paperboy.Summary, error) {
 	}
 
 	// Keyword extraction using basically.
-	kwords, err := doc.Highlight(20, true)
+	kwords, err := doc.Highlight(10, true)
 	if err != nil {
 		return nil, fmt.Errorf("%q: %w", "unable to extract keywords", err)
 	}

@@ -3,7 +3,7 @@ module paperboy-back
 go 1.16
 
 require (
-	github.com/algao1/basically v0.2.2
+	github.com/algao1/basically v0.2.3
 	github.com/go-chi/chi/v5 v5.0.0
 	github.com/go-redis/redis/v8 v8.7.1
 	github.com/joho/godotenv v1.3.0
