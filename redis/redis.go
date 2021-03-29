@@ -93,8 +93,8 @@ func (r *Redis) Summaries(sectionID, startID string, size int) ([]*paperboy.Summ
 }
 
 // Search returns a list of summaries matched by Mongo's fuzzy search.
-func (r *Redis) Search(query string) ([]*paperboy.Summary, error) {
-	return r.ss.Search(query)
+func (r *Redis) Search(query string, size int) ([]*paperboy.Summary, error) {
+	return r.ss.Search(query, size)
 }
 
 // Create inserts a summary into the database if possible, otherwise,

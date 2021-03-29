@@ -101,7 +101,7 @@ func (s *SummaryService) Summaries(sectionID, startID string, size int) ([]*pape
 
 // Search returns a list of summaries found using Mongo's fuzzy search
 // with the text index being the 'keywords' generated previously.
-func (s *SummaryService) Search(query string) ([]*paperboy.Summary, error) {
+func (s *SummaryService) Search(query string, size int) ([]*paperboy.Summary, error) {
 	var err error
 
 	// Configure search options, and filter.
@@ -109,6 +109,7 @@ func (s *SummaryService) Search(query string) ([]*paperboy.Summary, error) {
 	opts := []*options.FindOptions{
 		options.Find().SetProjection(bson.M{"score": bson.M{"$meta": "textScore"}}),
 		options.Find().SetSort(bson.M{"score": bson.M{"$meta": "textScore"}}),
+		options.Find().SetLimit(int64(size)),
 	}
 
 	cursor, err := s.col.Find(context.TODO(), filters, opts...)

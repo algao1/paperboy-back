@@ -61,6 +61,6 @@ type Summary struct {
 type SummaryService interface {
 	Summary(objectID string) (*Summary, error)
 	Summaries(sectionID, startID string, size int) ([]*Summary, string, error)
-	Search(query string) ([]*Summary, error)
+	Search(query string, size int) ([]*Summary, error)
 	Create(s *Summary) error
 }

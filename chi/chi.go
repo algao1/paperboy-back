@@ -46,7 +46,15 @@ func apiSearchSummaries(ss paperboy.SummaryService) http.HandlerFunc {
 		// Obtain the query parameter 'q'.
 		query := r.URL.Query().Get("q")
 
-		summaries, err := ss.Search(query)
+		// Obtain the query parameter 'size'.
+		ssize := r.URL.Query().Get("size")
+		size, err := strconv.Atoi(ssize)
+		if err != nil {
+			log.Printf("[%s] query param 'recent=%s' is invalid\n", r.URL, ssize)
+			size = 10
+		}
+
+		summaries, err := ss.Search(query, size)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
