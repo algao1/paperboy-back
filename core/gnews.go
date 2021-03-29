@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"paperboy-back"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -56,20 +55,12 @@ func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.Guardi
 			close(sumCh)
 		}()
 
-		var summs []*paperboy.Summary
-
 		// Receive summaries and error over channels.
 		for {
 			select {
 			case s, ok := <-sumCh:
+				// Wrap up the task on channel close.
 				if !ok {
-					// If channel is closed, we will sort the summaries chronologically.
-					// Adds the oldest news first, and moving towards the latest news.
-					sort.SliceStable(summs, func(i, j int) bool { return summs[i].Info.Date.Before(summs[j].Info.Date) })
-					for _, sum := range summs {
-						ss.Create(sum)
-					}
-
 					log.Printf("[Guardian News - %s] summarized %d articles in %v",
 						strings.Title(section),
 						len(g.Response.Results),
@@ -77,7 +68,8 @@ func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.Guardi
 					)
 					return nil
 				}
-				summs = append(summs, s)
+
+				ss.Create(s)
 			case err := <-errCh:
 				close(errCh)
 				return fmt.Errorf("%q: %w", "failed to summarize news", err)
@@ -86,7 +78,8 @@ func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.Guardi
 	}
 
 	// Configures and returns a Tasker.
-	conf := paperboy.TaskConfig{Name: "Guardian World", Period: 1 * time.Hour, RecoverPeriod: 5 * time.Minute}
+	name := fmt.Sprintf("Guardian %s", strings.Title(section))
+	conf := paperboy.TaskConfig{Name: name, Period: 1 * time.Hour, RecoverPeriod: 5 * time.Minute}
 	guardianNews, err := tf.CreateTasker(conf, task)
 	if err != nil {
 		return guardianNews, fmt.Errorf("%q: %w", "could not create Guardian tasker", err)

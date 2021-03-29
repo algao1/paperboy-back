@@ -79,8 +79,13 @@ func apiGetSummaries(ss paperboy.SummaryService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		section := chi.URLParam(r, "section")
 
-		// Obtain the query parameter 'id'.
-		id := r.URL.Query().Get("id")
+		// Obtain the query parameter 'end'.
+		end := r.URL.Query().Get("end")
+		endDate, err := time.Parse(time.RFC3339, end)
+		if err != nil {
+			log.Printf("[%s] query param 'end=%s' is invalid\n", r.URL, end)
+			endDate = time.Now()
+		}
 
 		// Obtain the query parameter 'size'.
 		ssize := r.URL.Query().Get("size")
@@ -91,7 +96,7 @@ func apiGetSummaries(ss paperboy.SummaryService) http.HandlerFunc {
 		}
 
 		// Fetch summaries using SummaryService.
-		summaries, last, err := ss.Summaries(section, id, size)
+		summaries, last, err := ss.Summaries(section, endDate, size)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -99,7 +104,7 @@ func apiGetSummaries(ss paperboy.SummaryService) http.HandlerFunc {
 		log.Printf("[%s] fetched summaries\n", r.URL)
 
 		// Marshals slice of summaries into []bytes.
-		js, err := json.Marshal(paperboy.SummariesResponse{LastID: last, Summaries: summaries})
+		js, err := json.Marshal(paperboy.SummariesResponse{LastDate: last, Summaries: summaries})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

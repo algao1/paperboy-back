@@ -2,6 +2,6 @@ package paperboy
 
 // SummariesResponse ...
 type SummariesResponse struct {
-	LastID    string `json:"LastId"`
+	LastDate  string
 	Summaries []*Summary
 }

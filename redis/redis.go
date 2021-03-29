@@ -56,38 +56,38 @@ func (r *Redis) Summary(objectID string) (*paperboy.Summary, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%q: %w", "unable to unmarshal json", err)
 		}
-		r.rdb.Set(ctx, objectID, json, 1*time.Hour).Err()
+		r.rdb.Set(ctx, objectID, json, 1*time.Hour)
 	}
 	return sum, nil
 }
 
 // Summaries returns a slice of the most recent summaries with a given sectionID such as
 // 'world' or 'tech'. A limit must be set for the maximum number of documents fetched.
-func (r *Redis) Summaries(sectionID, startID string, size int) ([]*paperboy.Summary, string, error) {
+func (r *Redis) Summaries(sectionID string, endDate time.Time, size int) ([]*paperboy.Summary, string, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 500*time.Millisecond)
 	defer cancel()
 
 	// Checks the local cache before querying service.
-	sstr, err := r.rdb.Get(ctx, fmt.Sprintf("%s:%s:%v", sectionID, startID, size)).Result()
+	sstr, err := r.rdb.Get(ctx, fmt.Sprintf("%s:%s:%v", sectionID, endDate, size)).Result()
 	if err == nil {
 		var ret paperboy.SummariesResponse
 		err := json.Unmarshal([]byte(sstr), &ret)
 		if err != nil {
 			return nil, "", fmt.Errorf("%q: %w", "unable to unmarshal json", err)
 		}
-		return ret.Summaries, ret.LastID, nil
+		return ret.Summaries, ret.LastDate, nil
 	}
 
 	// Otherwise, fetch from the underlying service.
-	sum, last, err := r.ss.Summaries(sectionID, startID, size)
+	sum, last, err := r.ss.Summaries(sectionID, endDate, size)
 	if err != nil {
 		return nil, "", fmt.Errorf("%q: %w", "unable to retrieve summaries", err)
-	} else if sum != nil && len(startID) > 0 {
-		json, err := json.Marshal(paperboy.SummariesResponse{LastID: last, Summaries: sum})
+	} else if sum != nil {
+		json, err := json.Marshal(paperboy.SummariesResponse{LastDate: last, Summaries: sum})
 		if err != nil {
 			return nil, "", fmt.Errorf("%q: %w", "unable to unmarshal json", err)
 		}
-		r.rdb.Set(ctx, fmt.Sprintf("%s:%s:%v", sectionID, startID, size), json, 1*time.Hour).Err()
+		r.rdb.Set(ctx, fmt.Sprintf("%s:%s:%v", sectionID, endDate, size), json, 1*time.Hour)
 	}
 	return sum, last, nil
 }
