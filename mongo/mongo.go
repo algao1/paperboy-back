@@ -58,7 +58,7 @@ func (s *SummaryService) Summaries(sectionID string, endDate time.Time, size int
 	// Filters.
 	filters := bson.M{}
 	filters["info.date"] = bson.M{"$lt": endDate.UTC()}
-	if len(sectionID) > 0 {
+	if len(sectionID) > 0 && sectionID != "all" {
 		filters["info.sectionid"] = sectionID
 	}
 

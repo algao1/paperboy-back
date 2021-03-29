@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"paperboy-back"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/algao1/basically/btrank"
@@ -27,36 +28,43 @@ var _ paperboy.GuardianService = (*Service)(nil)
 func (s *Service) Fetch(qparams map[string]string) (*paperboy.Guardian, error) {
 	// Appends params onto url.
 	url := "https://content.guardianapis.com/search?api-key=" + s.Key
+	section := "all"
+
 	for k, v := range qparams {
 		url += fmt.Sprintf("&%s=%s", k, v)
+		if k == "section" {
+			section = v
+		}
 	}
+
+	section = strings.Title(section)
 
 	// Sends a GET request to url.
 	res, err := http.DefaultClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("%q: %w", "getting Guardian API failed", err)
 	}
-	log.Println("[Guardian API] response found")
+	log.Printf("[Guardian API - %s] response found\n", section)
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("%q: %w", "failed to read response body", err)
 	}
 	defer res.Body.Close()
-	log.Println("[Guardian API] reading body")
+	log.Printf("[Guardian API - %s] reading body\n", section)
 
 	var g paperboy.Guardian
 	err = json.Unmarshal(body, &g)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("[Guardian API] json unmarshaled")
+	log.Printf("[Guardian API - %s] json unmarshaled\n", section)
 
 	// Checks if response was OK.
 	if g.Response.Status != "ok" {
 		return nil, fmt.Errorf(g.Response.Status)
 	}
-	log.Println("[Guardian API] response ok")
+	log.Printf("[Guardian API - %s] response ok\n", section)
 
 	return &g, nil
 }
@@ -86,7 +94,7 @@ func (s *Service) ExtractOne(r *paperboy.Result) (*paperboy.Summary, error) {
 	}
 	for _, a := range assets {
 		if a.TypeData.Width == 1000 {
-			log.Printf("[%s] image found\n", r.Title)
+			// log.Printf("[%s] image found\n", r.Title)
 			im.ImageFileURL = a.File
 			break
 		}
@@ -156,7 +164,7 @@ func (s *Service) ExtractOne(r *paperboy.Result) (*paperboy.Summary, error) {
 		},
 		Image: im,
 	}
-	log.Printf("[%s] summarization complete\n", r.Title)
+	// log.Printf("[%s] summarization complete\n", r.Title)
 
 	return &summ, nil
 }

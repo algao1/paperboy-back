@@ -41,7 +41,7 @@ func (f *Factory) CreateTasker(conf paperboy.TaskConfig, task paperboy.Task, par
 
 // Start begins executing the task at assigned intervals.
 func (t *Tasker) Start() {
-	log.Printf("[%v] starting task...\n\n", t.Config.Name)
+	log.Printf("[%v] starting task...\n", t.Config.Name)
 
 	// Executes the task in a separate goroutine.
 	go func() {

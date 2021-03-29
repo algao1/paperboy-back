@@ -10,7 +10,8 @@ import (
 )
 
 // GuardianNews returns a Tasker that will periodically fetch news from the Guardian API.
-func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.GuardianService, tf paperboy.TaskerFactory) (paperboy.Tasker, error) {
+func GuardianNews(section string, hours int, ss paperboy.SummaryService,
+	gs paperboy.GuardianService, tf paperboy.TaskerFactory) (paperboy.Tasker, error) {
 	// Defines the task.
 	task := func() error {
 		start := time.Now()
@@ -21,7 +22,7 @@ func GuardianNews(section string, ss paperboy.SummaryService, gs paperboy.Guardi
 			"show-tags":   "contributor",
 			"show-blocks": "main",
 			"page-size":   "50",
-			"from-date":   time.Now().UTC().Add(-24 * time.Hour).Format("2006-01-02T15:04:05.999999"),
+			"from-date":   time.Now().UTC().Add(time.Duration(hours) * time.Hour).Format("2006-01-02T15:04:05.999999"),
 		}
 
 		g, err := gs.Fetch(qparams)
