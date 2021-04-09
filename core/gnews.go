@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+func articleFilter(res *paperboy.Result) bool {
+	return strings.Contains(res.Title, "Letters |")
+}
+
 // GuardianNews returns a Tasker that will periodically fetch news from the Guardian API.
 func GuardianNews(section string, hours int, ss paperboy.SummaryService,
 	gs paperboy.GuardianService, tf paperboy.TaskerFactory) (paperboy.Tasker, error) {
@@ -38,8 +42,12 @@ func GuardianNews(section string, hours int, ss paperboy.SummaryService,
 		// Assign each summarization to a seperate goroutine.
 		go func() {
 			for _, res := range g.Response.Results {
-				wg.Add(1)
+				// Blacklist articles based on filter.
+				if !articleFilter(res) {
+					continue
+				}
 
+				wg.Add(1)
 				go func(res *paperboy.Result) {
 					defer wg.Done()
 
