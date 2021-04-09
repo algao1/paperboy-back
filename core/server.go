@@ -17,25 +17,25 @@ type Server struct {
 // Run starts the server at the designated port.
 func (s *Server) Run(port int) error {
 	// Start the tasks.
-	gworld, err := GuardianNews("world", -24, s.SummaryService, s.GuardianService, s.TaskerFactory)
+	gworld, err := GuardianNews("world", -2, s.SummaryService, s.GuardianService, s.TaskerFactory)
 	if err != nil {
 		return fmt.Errorf("%q: %w", "unable to start server", err)
 	}
 	gworld.Start()
 
-	genv, err := GuardianNews("environment", -24, s.SummaryService, s.GuardianService, s.TaskerFactory)
+	genv, err := GuardianNews("environment", -2, s.SummaryService, s.GuardianService, s.TaskerFactory)
 	if err != nil {
 		return fmt.Errorf("%q: %w", "unable to start server", err)
 	}
 	genv.Start()
 
-	gtech, err := GuardianNews("technology", -24, s.SummaryService, s.GuardianService, s.TaskerFactory)
+	gtech, err := GuardianNews("technology", -2, s.SummaryService, s.GuardianService, s.TaskerFactory)
 	if err != nil {
 		return fmt.Errorf("%q: %w", "unable to start server", err)
 	}
 	gtech.Start()
 
-	gsci, err := GuardianNews("technology", -24, s.SummaryService, s.GuardianService, s.TaskerFactory)
+	gsci, err := GuardianNews("science", -2, s.SummaryService, s.GuardianService, s.TaskerFactory)
 	if err != nil {
 		return fmt.Errorf("%q: %w", "unable to start server", err)
 	}
