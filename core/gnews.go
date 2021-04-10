@@ -19,7 +19,7 @@ func summarize(gs paperboy.GuardianService, res []*paperboy.Result,
 
 	for _, r := range res {
 		// Blacklist articles based on filter.
-		if !articleFilter(r) {
+		if articleFilter(r) {
 			continue
 		}
 
