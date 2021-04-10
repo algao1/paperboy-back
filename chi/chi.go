@@ -84,14 +84,14 @@ func apiGetSummaries(ss paperboy.SummaryService) http.HandlerFunc {
 		endDate, err := time.Parse(time.RFC3339, end)
 		if err != nil {
 			log.Printf("[%s] query param 'end=%s' is invalid\n", r.URL, end)
-			endDate = time.Now()
+			endDate = time.Time{}
 		}
 
 		// Obtain the query parameter 'size'.
 		ssize := r.URL.Query().Get("size")
 		size, err := strconv.Atoi(ssize)
 		if err != nil {
-			log.Printf("[%s] query param 'recent=%s' is invalid\n", r.URL, ssize)
+			log.Printf("[%s] query param 'size=%s' is invalid\n", r.URL, ssize)
 			size = 10
 		}
 

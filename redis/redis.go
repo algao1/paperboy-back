@@ -58,6 +58,7 @@ func (r *Redis) Summary(objectID string) (*paperboy.Summary, error) {
 		}
 		r.rdb.Set(ctx, objectID, json, 1*time.Hour)
 	}
+
 	return sum, nil
 }
 
@@ -66,6 +67,11 @@ func (r *Redis) Summary(objectID string) (*paperboy.Summary, error) {
 func (r *Redis) Summaries(sectionID string, endDate time.Time, size int) ([]*paperboy.Summary, string, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 500*time.Millisecond)
 	defer cancel()
+
+	// If we get zero-value for endDate, skip Redis and use current time.
+	if endDate.Equal(time.Time{}) {
+		return r.ss.Summaries(sectionID, time.Now(), size)
+	}
 
 	// Checks the local cache before querying service.
 	sstr, err := r.rdb.Get(ctx, fmt.Sprintf("%s:%s:%v", sectionID, endDate, size)).Result()
@@ -89,6 +95,7 @@ func (r *Redis) Summaries(sectionID string, endDate time.Time, size int) ([]*pap
 		}
 		r.rdb.Set(ctx, fmt.Sprintf("%s:%s:%v", sectionID, endDate, size), json, 1*time.Hour)
 	}
+
 	return sum, last, nil
 }
 
