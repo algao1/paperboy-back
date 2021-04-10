@@ -9,8 +9,34 @@ import (
 	"time"
 )
 
-func articleFilter(res *paperboy.Result) bool {
-	return strings.Contains(res.Title, "Letters |")
+func articleFilter(r *paperboy.Result) bool {
+	return strings.Contains(r.Title, "| Letters")
+}
+
+func summarize(gs paperboy.GuardianService, res []*paperboy.Result,
+	sch chan<- *paperboy.Summary, ech chan<- error) {
+	var wg sync.WaitGroup
+
+	for _, r := range res {
+		// Blacklist articles based on filter.
+		if !articleFilter(r) {
+			continue
+		}
+
+		wg.Add(1)
+		go func(r *paperboy.Result) {
+			defer wg.Done()
+
+			summ, err := gs.ExtractOne(r)
+			if err != nil {
+				ech <- err
+			}
+			sch <- summ
+		}(r)
+	}
+
+	wg.Wait()
+	close(sch)
 }
 
 // GuardianNews returns a Tasker that will periodically fetch news from the Guardian API.
@@ -37,32 +63,9 @@ func GuardianNews(section string, hours int, ss paperboy.SummaryService,
 		// Create channels and waitGroup.
 		errCh := make(chan error)
 		sumCh := make(chan *paperboy.Summary)
-		var wg sync.WaitGroup
 
 		// Assign each summarization to a seperate goroutine.
-		go func() {
-			for _, res := range g.Response.Results {
-				// Blacklist articles based on filter.
-				if !articleFilter(res) {
-					continue
-				}
-
-				wg.Add(1)
-				go func(res *paperboy.Result) {
-					defer wg.Done()
-
-					summ, err := gs.ExtractOne(res)
-					if err != nil {
-						errCh <- err
-					}
-					sumCh <- summ
-				}(res)
-			}
-
-			// Waits for all summaries to be completed, then closes the channel.
-			wg.Wait()
-			close(sumCh)
-		}()
+		go summarize(gs, g.Response.Results, sumCh, errCh)
 
 		// Receive summaries and error over channels.
 		for {
@@ -77,7 +80,6 @@ func GuardianNews(section string, hours int, ss paperboy.SummaryService,
 					)
 					return nil
 				}
-
 				ss.Create(s)
 			case err := <-errCh:
 				close(errCh)
@@ -93,5 +95,6 @@ func GuardianNews(section string, hours int, ss paperboy.SummaryService,
 	if err != nil {
 		return guardianNews, fmt.Errorf("%q: %w", "could not create Guardian tasker", err)
 	}
+
 	return guardianNews, nil
 }
