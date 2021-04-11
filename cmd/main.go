@@ -38,7 +38,7 @@ func main() {
 	}
 	ssc := redis.NewSummaryCache(os.Getenv("CACHE_URL"), os.Getenv("CACHE_PORT"), os.Getenv("CACHE_PASS"), cdb, ss)
 
-	gs := &guardian.Service{Key: os.Getenv("GUARDIAN_KEY")}
+	gs := guardian.Create(os.Getenv("GUARDIAN_KEY"))
 	tf := &tasker.Factory{}
 	h := chi.Init(ssc)
 

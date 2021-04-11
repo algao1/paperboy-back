@@ -19,10 +19,16 @@ import (
 
 // Service represents an implementation of paperboy.GuardianService.
 type Service struct {
-	Key string
+	Key    string
+	parser *parser.Parser
 }
 
 var _ paperboy.GuardianService = (*Service)(nil)
+
+// Create initializes the service with a key, and a parser.
+func Create(key string) *Service {
+	return &Service{Key: key, parser: parser.Create()}
+}
 
 // Fetch returns the result of querying the Guardian API with the specified parameters.
 func (s *Service) Fetch(qparams map[string]string) (*paperboy.Guardian, error) {
@@ -118,7 +124,7 @@ func (s *Service) ExtractOne(r *paperboy.Result) (*paperboy.Summary, error) {
 	tText := reg.ReplaceAllString(r.Fields.TrailText, "")
 
 	// Set up basically document.
-	doc, err := document.Create(r.Fields.BodyText, &btrank.BiasedTextRank{}, &trank.KWTextRank{}, &parser.Parser{})
+	doc, err := document.Create(r.Fields.BodyText, &btrank.BiasedTextRank{}, &trank.KWTextRank{}, s.parser)
 	if err != nil {
 		return nil, fmt.Errorf("%q: %w", "unable to create basically document", err)
 	}
