@@ -36,7 +36,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ssc := redis.NewSummaryCache(os.Getenv("CACHE_URL"), os.Getenv("CACHE_PORT"), os.Getenv("CACHE_PASS"), cdb, ss)
+	ssc := redis.NewSummaryCache(
+		os.Getenv("CACHE_URL"),
+		os.Getenv("CACHE_PORT"),
+		os.Getenv("CACHE_PASS"),
+		cdb, ss)
 
 	gs := guardian.Create(os.Getenv("GUARDIAN_KEY"))
 	tf := &tasker.Factory{}
