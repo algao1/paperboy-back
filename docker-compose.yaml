@@ -1,0 +1,24 @@
+version: "3.7"
+services:
+
+  paperback:
+    build:
+      context: "./paperboy-back"
+      dockerfile: "Dockerfile"
+    container_name: paperback
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_KEY=${MONGO_KEY}
+      - GUARDIAN_KEY=${GUARDIAN_KEY}
+    ports:
+      - 8080:8080
+
+  paperfront:
+    build:
+      context: "./paperboy-front"
+      dockerfile: "Dockerfile"
+    container_name: paperfront
+    environment:
+      - PAPERBOY_BACK=paperback
+    ports:
+      - 3000:3000

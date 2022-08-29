@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"paperboy-back"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,12 +21,16 @@ type SummaryService struct {
 var _ paperboy.SummaryService = (*SummaryService)(nil)
 
 // Open returns a pointer to SummaryService with the MongoDB collection configured.
-func Open(uri, key, db, col string) (*SummaryService, error) {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(fmt.Sprintf(uri, key)))
+func Open(uri, key string) (*SummaryService, error) {
+	client, err := mongo.Connect(
+		context.TODO(),
+		options.Client().ApplyURI(strings.ReplaceAll(uri, "<password>", key)),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("%q: %w", "unable to connect to collection", err)
 	}
-	collection := client.Database(db).Collection(col)
+	collection := client.Database("paperboy").Collection("develop")
+
 	return &SummaryService{col: collection}, nil
 }
 

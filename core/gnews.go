@@ -80,7 +80,9 @@ func GuardianNews(section string, hours int, ss paperboy.SummaryService,
 					)
 					return nil
 				}
-				ss.Create(s)
+				if err := ss.Create(s); err != nil {
+					log.Println(err)
+				}
 			case err := <-errCh:
 				close(errCh)
 				return fmt.Errorf("%q: %w", "failed to summarize news", err)
